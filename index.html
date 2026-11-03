@@ -1,6 +1,18 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="마리모를 굴려 어항을 지키는 횡스크롤 디펜스 게임">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%}
+body{margin:0;font:14px/1.4 system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
 <title>마리모 대전쟁</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
 <style>
 /* Layout: one lane under the lake — field on top, unit deck below, two big action keys at the thumb line */
@@ -181,6 +193,14 @@ button:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
 .dangerBtn:active{transform:translateY(1px)}
 .confirmRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .adminDone{color:var(--moss)!important;text-align:center}
+.pwForm{display:flex;flex-direction:column;gap:6px}
+.pwForm label{font-size:12px;color:var(--muted)}
+.pwForm input{font-family:var(--display);font-size:22px;letter-spacing:.3em;text-align:center;padding:10px;border-radius:10px;border:1px solid #8a3a32;background:var(--deep);color:var(--ink);width:100%}
+.pwForm input:focus{outline:2px solid var(--sun);outline-offset:1px}
+.pwErr{margin:0;min-height:1.3em;color:#ff9a8a!important;font-size:13px!important}
+.pwForm.shake{animation:pwShake .35s}
+@keyframes pwShake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+@media (prefers-reduced-motion:reduce){.pwForm.shake{animation:none}}
 @media (max-width:520px){
   .stage{font-size:17px}
   .unit .nm{font-size:10px}
@@ -188,7 +208,8 @@ button:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
   .act b{font-size:16px}
 }
 </style>
-
+</head>
+<body>
 <div class="app">
   <div class="bar">
     <div class="stage" id="stageName">마리모 대전쟁</div>
@@ -303,8 +324,13 @@ button:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
     </div>
     <div class="danger confirm" id="dangerConfirm" hidden>
       <b>정말 모두 초기화할까요?</b>
-      <p>지운 데이터는 되돌릴 수 없어요.</p>
-      <div class="confirmRow"><button class="ghost" id="resetCancel">취소</button><button class="dangerBtn" id="resetYes">초기화</button></div>
+      <p>지운 데이터는 되돌릴 수 없어요. 관리자 비밀번호를 입력하세요.</p>
+      <form class="pwForm" id="resetForm" autocomplete="off">
+        <label for="resetPw">비밀번호</label>
+        <input id="resetPw" type="password" inputmode="numeric" maxlength="12" placeholder="숫자 4자리" autocomplete="off">
+        <p class="pwErr" id="pwErr" role="alert"></p>
+        <div class="confirmRow"><button type="button" class="ghost" id="resetCancel">취소</button><button type="submit" class="dangerBtn" id="resetYes">초기화</button></div>
+      </form>
     </div>
     <p class="adminDone" id="adminDone" hidden>초기화했어요. 햇살 구슬 1500개와 기본 마리모 5마리로 다시 시작해요.</p>
   </div>
@@ -368,13 +394,13 @@ const ENEMIES={
   algae:{name:'녹조 덩어리',hp:650,atk:32,range:30, speed:16, rate:2.0, kb:2, r:26, reward:130, kind:'algae', area:true},
   cray: {name:'왕가재',   hp:4800,atk:95, range:56, speed:14, rate:2.6, kb:4, r:40, reward:650, kind:'cray', area:true},
   // ---- stage bosses ----
-  urung:{name:'우렁 대왕', hp:9000,atk:110,range:52, speed:10, rate:2.6, kb:5, r:44, reward:1500,kind:'urung', area:true, boss:true,
+  urung:{name:'우렁 대왕', hp:9000,atk:85,range:52, speed:10, rate:2.6, kb:5, r:44, reward:1500,kind:'urung', area:true, boss:true,
          skill:'9초마다 껍데기에 숨어 피해를 75% 줄이고, 새끼 달팽이를 불러요'},
-  bluegill:{name:'폭군 블루길',hp:17000,atk:115,range:62,speed:15,rate:2.2,kb:5,r:46,reward:2500,kind:'bluegill',area:true,boss:true,
+  bluegill:{name:'폭군 블루길',hp:17000,atk:90,range:62,speed:15,rate:2.2,kb:5,r:46,reward:2500,kind:'bluegill',area:true,boss:true,
          skill:'돌진해서 줄을 뚫고, 작은 마리모를 통째로 삼켜요. 덩치 큰 마리모는 돌진을 막아요'},
-  queen:{name:'녹조 여왕', hp:20000,atk:60,range:170,speed:9, rate:3.4, kb:4, r:46, reward:3500,kind:'queen', area:true, boss:true,
+  queen:{name:'녹조 여왕', hp:20000,atk:48,range:170,speed:9, rate:3.4, kb:4, r:46, reward:3500,kind:'queen', area:true, boss:true,
          skill:'먼 곳에 독 포자를 뿌려 마리모를 느리게 하고, 녹조 군단을 불러요. 사거리 긴 마리모가 유리해요'},
-  bass: {name:'심연의 큰입배스',hp:40000,atk:165,range:72,speed:13,rate:2.6,kb:6,r:56,reward:6000,kind:'bass', area:true, boss:true,
+  bass: {name:'심연의 큰입배스',hp:40000,atk:130,range:72,speed:13,rate:2.6,kb:6,r:56,reward:6000,kind:'bass', area:true, boss:true,
          skill:'체력이 절반 아래로 떨어지면 폭주해요. 꼬리치기로 줄 전체를 날리고 한입에 여럿을 삼켜요'},
 };
 // theme: 0 tank, 1 pond, 2 Lake Akan, 3 the abyss
@@ -427,8 +453,9 @@ const DESC={
   algae:'물을 탁하게 만드는 덩어리. 주변을 한꺼번에 공격해요.',
   cray:'호수의 폭군. 둥지가 약해지면 나타나 집게로 줄을 무너뜨려요.',
 };
-const RATE=[18,24,30,37,44,52,60,70], MAX=[600,900,1300,1800,2400,3100,3900,4800], UPC=[80,160,240,320,400,480,560];
-const BEAM_CHARGE=22, PLAYER_HP=2200;
+const RATE=[22,29,36,44,52,61,70,80], MAX=[700,1000,1400,1900,2500,3200,4000,5000], UPC=[80,160,240,320,400,480,560];
+const BEAM_CHARGE=18, PLAYER_HP=3000;
+const ENEMY_SCALE=.85; // easier mode: every ordinary invader has 15% less HP and attack
 
 /* ---------- state ---------- */
 const SAVE_KEY='marimo-war-save';
@@ -449,7 +476,7 @@ let DECK=save.deck.map(unitStats);
 let g=null, mode='menu', paused=false, speedMul=1, stageIdx=0;
 function newGame(i){
   const S=STAGES[i];
-  g={time:0,energy:100,lv:0,cd:DECK.map(()=>0),kills:0,fx:[],waves:[],beam:0,ents:[],proj:[],parts:[],floats:[],
+  g={time:0,energy:200,lv:0,cd:DECK.map(()=>0),kills:0,fx:[],waves:[],beam:0,ents:[],proj:[],parts:[],floats:[],
      baseHp:{p:PLAYER_HP,e:S.baseHp},baseMax:{p:PLAYER_HP,e:S.baseHp},baseHit:{p:0,e:0},
      spawns:S.spawns.map(s=>({...s,next:s.first})),bosses:S.bosses.map(b=>({...b,done:false})),
      shake:0,beamFx:0,stage:S,
@@ -703,7 +730,7 @@ function fireBeam(){
 }
 function spawnEnemy(t,atX){
   if(g.ents.filter(e=>e.side==='e'&&!e.dead).length>=CAP)return null;
-  const e=makeEnt(ENEMIES[t],'e',g.stage.mult);
+  const e=makeEnt(ENEMIES[t],'e',g.stage.mult*ENEMY_SCALE);
   if(atX!==undefined)e.x=clamp(atX,EBX+BASE_HALF+e.r,PBX-BASE_HALF-e.r-60);
   if(t==='cray'){g.shake=10;Snd.sfx('boss');if(!g.bossEnt)Snd.music('boss')}
   g.ents.push(e);return e;
@@ -884,7 +911,7 @@ function update(dt){
   if(g.bossPending>0){g.bossPending-=dt;if(g.bossPending<=0)spawnBoss()}
   g.bossIntro=Math.max(0,g.bossIntro-dt);g.bossDown=Math.max(0,g.bossDown-dt);g.shieldHit=Math.max(0,g.shieldHit-dt);
   if(g.bossEnt&&!g.bossEnt.dead)bossThink(g.bossEnt,dt);
-  const ramp=1+Math.min(.6,g.time/240);
+  const ramp=1+Math.min(.4,g.time/300);
   for(const s of g.spawns){s.next-=dt*ramp;if(s.next<=0){spawnEnemy(s.t);s.next=s.every*(.85+Math.random()*.3)}}
   for(const b of g.bosses){if(!b.done&&g.baseHp.e<=g.baseMax.e*b.at){b.done=true;if(!b.list.includes('cray'))Snd.sfx('alarm');const gg=g;b.list.forEach((t,i)=>setTimeout(()=>g===gg&&mode==='play'&&spawnEnemy(t),i*900))}}
   for(const e of g.ents){
@@ -1765,7 +1792,15 @@ function renderAdminStats(){
   const owned=UNITS.filter(u=>save.owned[u.id]).length,cleared=Object.keys(save.cleared||{}).length;
   $('adminStats').innerHTML=`<dt>햇살 구슬</dt><dd>${save.beads.toLocaleString()}</dd><dt>모은 마리모</dt><dd>${owned} / ${UNITS.length}</dd><dt>클리어한 스테이지</dt><dd>${cleared} / ${STAGES.length}</dd><dt>뽑기 횟수</dt><dd>${save.pulls||0}</dd><dt>게임 속도</dt><dd>×${speedMul}</dd>`;
 }
-function adminConfirm(on){$('dangerIdle').hidden=on;$('dangerConfirm').hidden=!on;if(on)$('resetCancel').focus()}
+// the password is stored only as a hash so it doesn't appear as plain text in the page source
+const RESET_HASH='6c738ecc';
+function pwHash(s){let h=0x811c9dc5;for(const ch of 'marimo:'+s){h^=ch.codePointAt(0);h=Math.imul(h,0x01000193)>>>0}return h.toString(16).padStart(8,'0')}
+let pwFails=0,pwLockUntil=0;
+function adminConfirm(on){
+  $('dangerIdle').hidden=on;$('dangerConfirm').hidden=!on;
+  $('resetPw').value='';$('pwErr').textContent='';
+  if(on)setTimeout(()=>$('resetPw').focus(),0);
+}
 function openAdmin(){Snd.sfx('click');renderAdminStats();adminConfirm(false);$('adminDone').hidden=true;$('admin').hidden=false}
 function resetAll(){
   try{['marimo-war-save','marimo-war-unlocked','marimo-war-speed'].forEach(k=>localStorage.removeItem(k))}catch(e){}
@@ -1780,7 +1815,16 @@ $('homeAdmin').addEventListener('click',openAdmin);
 $('adminClose').addEventListener('click',()=>{Snd.sfx('click');$('admin').hidden=true;syncBeads()});
 $('resetAsk').addEventListener('click',()=>{Snd.sfx('alarm');$('adminDone').hidden=true;adminConfirm(true)});
 $('resetCancel').addEventListener('click',()=>{Snd.sfx('click');adminConfirm(false)});
-$('resetYes').addEventListener('click',resetAll);
+$('resetForm').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const now=Date.now(),inp=$('resetPw'),err=$('pwErr'),form=$('resetForm');
+  if(now<pwLockUntil){err.textContent=`입력을 여러 번 틀렸어요. ${Math.ceil((pwLockUntil-now)/1000)}초 뒤에 다시 시도하세요.`;Snd.sfx('deny');return}
+  if(pwHash(inp.value.trim())===RESET_HASH){pwFails=0;resetAll();return}
+  pwFails++;inp.value='';inp.focus();Snd.sfx('deny');
+  form.classList.remove('shake');void form.offsetWidth;form.classList.add('shake');
+  if(pwFails>=5){pwFails=0;pwLockUntil=now+30000;err.textContent='5번 틀려서 30초 동안 잠겼어요.'}
+  else err.textContent=`비밀번호가 맞지 않아요. (${pwFails}/5)`;
+});
 
 /* ---------- home screen ---------- */
 const hb=$('homeBg'),hctx=hb.getContext('2d'),heroC=$('hero').getContext('2d');
@@ -1875,5 +1919,5 @@ function frame(now){
 requestAnimationFrame(frame);
 })();
 </script>
-
-</body></html>
+</body>
+</html>
